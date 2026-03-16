@@ -110,10 +110,10 @@
         const createBtn = document.getElementById('createBtn');
         const errorDiv = document.getElementById('error');
 
-        // API Functions
+        // Enhanced API Request Function
         async function makeRequest(endpoint, data) {
             try {
-                const response = await fetch(`/api/${endpoint}`, {
+                const response = await fetch(`/.netlify/functions/server/${endpoint}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -121,17 +121,19 @@
                     body: JSON.stringify(data)
                 });
                 
+                const responseData = await response.json();
+                
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    throw new Error(responseData.error || 'Unknown error occurred');
                 }
                 
-                return await response.json();
+                return responseData;
             } catch (error) {
                 console.error('API Error:', error);
-                showError('Server error. Please try again.');
+showError(error.message || 'Network error. Please try again.');
                 return { error: error.message };
             }
-}
+        }
 
         // UI Functions
         function showError(message) {
@@ -166,7 +168,7 @@
                 showError(result.error);
             } else {
                 showSuccess('Login successful! Redirecting...');
-                // In a real app, you would redirect to the trading interface
+                // In a real app, redirect to dashboard:
                 // window.location.href = '/dashboard.html';
             }
         });
@@ -208,6 +210,9 @@
                 }
             });
         });
+
+        // Initialization check
+        console.log('Frontend initialized. API base:', '/.netlify/functions/server');
     </script>
 </body>
 </html>
