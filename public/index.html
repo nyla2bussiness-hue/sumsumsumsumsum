@@ -4,20 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- NO MORE META CSP - WE'LL USE NETLIFY HEADERS INSTEAD -->
-    <title>NOIR UNCHAINED</title>
+    <title>NOIR TRADE</title>
     <style>
         body {
             background: #000;
             color: #00ffa3;
             font-family: monospace;
             margin: 0;
+            padding: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .noir-terminal {
+        .terminal {
             background: #111;
             border: 1px solid #00ffa3;
             padding: 2rem;
@@ -26,7 +26,7 @@
         input, button {
             width: 100%;
             padding: 10px;
-            margin: 10px 0;
+            margin: 8px 0;
             background: #222;
             color: white;
             border: 1px solid #333;
@@ -41,11 +41,12 @@
             color: #ff4d4d;
             height: 20px;
             text-align: center;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
-    <div class="noir-terminal">
+    <div class="terminal">
         <h1>NOIR SYSTEM</h1>
         <input id="username" placeholder="Username" autocomplete="username">
         <input id="password" type="password" placeholder="Password" autocomplete="current-password">
@@ -54,47 +55,97 @@
         <div id="error"></div>
     </div>
 
-    <!-- RAW JAVASCRIPT - NO EVAL, NO CSP BLOCKS -->
     <script>
-        // HARDENED FETCH
-        const noirFetch = async (endpoint, data) => {
+        // SAFE FETCH FUNCTION
+        const apiCall = async (endpoint, data) => {
             try {
-                const response = await fetch(
-                    `/.netlify/functions/server/${endpoint}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    }
-                );
+                const response = await fetch(`/.netlify/functions/server/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
                 return await response.json();
             } catch (err) {
-                document.getElementById('error').textContent = "SYSTEM ERROR";
+                document.getElementById('error').textContent = "Connection failed";
                 return { error: true };
             }
         };
 
-        // BUTTON ACTIONS
-        document.getElementById('loginBtn').onclick = async () => {
-            const res = await noirFetch('login', {
+        // BUTTON HANDLERS
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const res = await apiCall('login', {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value
             });
-            if (!res.error) alert("ACCESS GRANTED");
-        };
+            if (!res.error) alert("Access granted!");
+        });
 
-        document.getElementById('createBtn').onclick = async () => {
-            const res = await noirFetch('create', {
+        document.getElementById('createBtn').addEventListener('click', async () => {
+            const res = await apiCall('create', {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value
             });
-            if (!res.error) alert("ACCOUNT CREATED");
-        };
-
-        // VISUAL CONFIRMATION
-        document.querySelector('h1').style.textShadow = "0 0 10px #00ffa3";
-        console.log("NOIR INTERFACE ACTIVE");
+            if (!res.error) alert("Account created!");
+        });
     </script>
 </body>
 </html>
+```
+
+### `server.js` (Final Working Version)
+```javascript
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
+
+const app = express();
+
+// Enable CORS
+app.use(cors({
+    origin: '*',
+    methods: ['POST']
+}));
+
+// Database simulation
+const accounts = {
+    demo: { password: 'demo', balance: 10000 }
+};
+
+// Login endpoint
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!accounts[username] || accounts[username].password !== password) {
+        return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    res.json({ 
+        success: true,
+        user: {
+            username,
+            balance: accounts[username].balance
+        }
+    });
+});
+
+// Create account endpoint
+app.post('/create', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (accounts[username]) {
+        return res.status(400).json({ error: 'User exists' });
+    }
+    
+    acco
+unts[username] = { password, balance: 10000 };
+    res.json({ success: true });
+});
+
+// Error handling
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+});
+
+module.exports.handler = serverless(app);
 ```
