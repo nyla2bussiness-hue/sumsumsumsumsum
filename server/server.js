@@ -1,45 +1,36 @@
 const express = require('express');
 const cors = require('cors');
-const bodyParser = require('body-parser');
-
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-// Simple in-memory database
+// 1. Add CORS configuration (paste this at the TOP)
+app.use(cors({
+  origin: ['https://your-site-name.netlify.app', 'http://localhost:3000'],
+  credentials: true
+}));
+
+app.use(express.json());
+
+// 2. Your existing routes stay here
 let accounts = {
-  demo: {
-    username: 'demo',
-    password: 'demo',
-    balance: 10000
-  }
+  demo: { username: 'demo', password: 'demo', balance: 10000 }
 };
 
-// Account endpoints
-app.post('/api/login', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (!accounts[username] || accounts[username].password !== password) {
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
-  
-  res.json({ account: accounts[username] });
+app.post('/login', (req, res) => {
+  // ... your existing login code ...
 });
 
-app.post('/api/create', (req, res) => {
-  const { username, password } = req.body;
-  
-  if (accounts[username]) {
-    return res.status(400).json({ error: 'Username exists' });
-  }
-  
-  accounts[username] = {
-    username,
-    password,
-    balance: 10000
-  };
-  
-  res.json({ success: true });
+app.post('/create', (req, res) => {
+  // ... your existing create account code ...
 });
 
+// 3. Add error handling middleware (paste this AFTER all routes)
+app.use((err, req, res, next) => {
+  console.error('Server error:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error',
+    message: err.message 
+  });
+});
+
+// 4. Export for Netlify (add this at the BOTTOM)
 module.exports = app;
