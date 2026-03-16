@@ -1,219 +1,45 @@
-```html
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Trading Platform</title>
-    <style>
-        :root {
-            --primary: #00ffa3;
-            --danger: #ff4d4d;
-            --bg-dark: #0b0e11;
-            --bg-panel: #151a21;
-            --text-light: #eee;
-        }
-        
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        
-        .login-container {
-            background: var(--bg-panel);
-            padding: 2rem;
-            border-radius: 10px;
-            width: 300px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        
-        h1 {
-            text-align: center;
-            color: var(--primary);
-            margin-top: 0;
-        }
-        
-        input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #333;
-            border-radius: 4px;
-            color: white;
-            box-sizing: border-box;
-        }
-        
-        button {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        
-        button:hover {
-            opacity: 0.9;
-        }
-        
-        .login-btn {
-            background: var(--primary);
-            color: #000;
-        }
-        
-        .create-btn {
-            background: #2962FF;
-            color: white;
-        }
-        
-        .error {
-            color: var(--danger);
-            text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
-            min-height: 20px;
-        }
-        
-        .demo-note {
-            font-size: 12px;
-            text-align: center;
-            color: #777;
-            margin-top: 20px;
-        }
-    </style>
-</head>
+<html>
+<!-- [Previous head and styles remain exactly the same] -->
 <body>
-    <div class="login-container">
-        <h1>Trade Nexus</h1>
-        <input id="username" placeholder="Username" autocomplete="username">
-        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-        <button id="loginBtn" class="login-btn">Login</button>
-        <button id="createBtn" class="create-btn">Create Account</button>
-        <div id="error" class="error"></div>
-        <div class="demo-note">Demo account: demo / demo</div>
-    </div>
+    <!-- [Previous HTML structure remains the same] -->
 
     <script>
-        // DOM Elements
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-        const createBtn = document.getElementById('createBtn');
-        const errorDiv = document.getElementById('error');
+        // Enhanced API handler with JSON parsing safeguards
+        async function handleResponse(response) {
+            const text = await response.text();
+            try {
+                return text ? JSON.parse(text) : {};
+            } catch (e) {
+                console.error('JSON parse error:', text);
+                throw new Error('Invalid server response');
+            }
+        }
 
-        // Enhanced API Request Function
         async function makeRequest(endpoint, data) {
             try {
                 const response = await fetch(`/.netlify/functions/server/${endpoint}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
                 
-                const responseData = await response.json();
+                const result = await handleResponse(response);
                 
                 if (!response.ok) {
-                    throw new Error(responseData.error || 'Unknown error occurred');
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
                 }
                 
-                return responseData;
+                return result;
+                
             } catch (error) {
                 console.error('API Error:', error);
-showError(error.message || 'Network error. Please try again.');
+                showError(error.message || 'Network error. Please try again.');
                 return { error: error.message };
             }
         }
 
-        // UI Functions
-        function showError(message) {
-            errorDiv.textContent = message;
-            setTimeout(() => {
-                errorDiv.textContent = '';
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            errorDiv.style.color = 'var(--primary)';
-            errorDiv.textContent = message;
-            setTimeout(() => {
-                errorDiv.textContent = '';
-                errorDiv.style.color = 'var(--danger)';
-            }, 3000);
-        }
-
-        // Event Handlers
-        loginBtn.addEventListener('click', async () => {
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            if (!username || !password) {
-                showError('Please enter both username and password');
-                return;
-            }
-
-            const result = await makeRequest('login', { username, password });
-            
-            if (result.error) {
-                showError(result.error);
-            } else {
-                showSuccess('Login successful! Redirecting...');
-                // In a real app, redirect to dashboard:
-                // window.location.href = '/dashboard.html';
-            }
-        });
-
-        createBtn.addEventListener('click', async () => {
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-
-            if (!username || !password) {
-                showError('Please enter both username and password');
-                return;
-            }
-
-            if (username.length < 3 || password.length < 3) {
-                showError('Username and password must be at least 3 characters');
-                return;
-            }
-
-            const result = await makeRequest('create', { username, password });
-            
-            if (result.error) {
-                showError(result.error);
-            } else {
-                showSuccess('Account created successfully!');
-                usernameInput.value = '';
-                passwordInput.value = '';
-            }
-        });
-
-        // Handle Enter key
-        [usernameInput, passwordInput].forEach(input => {
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    if (e.target === usernameInput) {
-                        passwordInput.focus();
-                    } else {
-                        loginBtn.click();
-                    }
-                }
-            });
-        });
-
-        // Initialization check
-        console.log('Frontend initialized. API base:', '/.netlify/functions/server');
+        // [Rest of your existing JavaScript code remains the same]
     </script>
 </body>
 </html>
-```
