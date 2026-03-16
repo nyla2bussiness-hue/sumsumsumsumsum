@@ -1,98 +1,59 @@
 ```html
-<!DOCTYPE html>
+<!DOCTYPE html> <!-- Fixes Quirks Mode -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- NOIR-APPROVED CSP (ALLOWS INLINE SCRIPTS) -->
+    <!-- NOIR'S PERMISSIVE CSP -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
-        script-src 'self' 'unsafe-inline' https://scintillating-sherbet-2280c0.netlify.app;
+        script-src 'self' 'unsafe-inline';
         style-src 'self' 'unsafe-inline';
-        connect-src 'self' https://scintillating-sherbet-2280c0.netlify.app;
-        img-src 'self' data:">
-    <title>NOIR TRADE PLATFORM</title>
+        connect-src 'self' https://scintillating-sherbet-2280c0.netlify.app">
+    <title>NOIR TRADE</title>
     <style>
         body {
-            background-color: #0a0a0a;
+            background: #0a0a0a;
             color: #e0e0e0;
-            font-family: 'Courier New', monospace;
+            font-family: monospace;
             margin: 0;
-            padding: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        .login-box {
+        .noir-box {
             background: #121212;
             border: 1px solid #333;
             padding: 2rem;
             width: 300px;
-            box-shadow: 0 0 20px rgba(0, 255, 163, 0.3);
         }
-        h1 {
-            color: #00ffa3;
-            text-align: center;
-            margin-top: 0;
-            font-size: 24px;
-        }
-        input {
+        h1 { color: #00ffa3; text-align: center; }
+        input, button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
             background: #1e1e1e;
-            border: 1px solid #333;
             color: white;
+            border: 1px solid #333;
         }
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background: #00ffa3;
-            color: black;
-            border: none;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #error {
-            color: #ff4d4d;
-            text-align: center;
-            font-size: 14px;
-            min-height: 20px;
-        }
+        button { background: #00ffa3; color: black; font-weight: bold; }
+        #error { color: #ff4d4d; text-align: center; height: 20px; }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h1>NOIR TRADER</h1>
-        <input id="username" placeholder="Username">
-        <input id="password" type="password" placeholder="Password">
+    <div class="noir-box">
+        <h1>NOIR TRADE</h1>
+        <!-- Added autocomplete attributes -->
+        <input id="username" placeholder="Username" autocomplete="username">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password">
         <button id="loginBtn">ENTER</button>
         <button id="createBtn">NEW USER</button>
         <div id="error"></div>
     </div>
 
-    <!-- NOIR-GUARANTEED WORKING SCRIPT -->
     <script>
-        // TEST: Immediate visual confirmation
-        document.body.style.opacity = "1";
-        console.log("NOIR SYSTEM ONLINE");
-
-        // Elements
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-        const createBtn = document.getElementById('createBtn');
-        const errorDiv = document.getElementById('error');
-
-        // Show error
-        function showError(msg) {
-            errorDiv.textContent = msg;
-            setTimeout(() => errorDiv.textContent = '', 3000);
-        }
-
-        // API call
+        // ===== NOIR'S BULLETPROOF FETCH =====
         async function noirFetch(endpoint, data) {
             try {
                 const response = await fetch(
@@ -104,43 +65,41 @@
                     }
                 );
                 
-                const result = await response.json();
+                // SAFE JSON PARSE
+                const text = await response.text();
+                if (!text) throw new Error("Empty response");
+                const result = JSON.parse(text);
+                
                 if (!response.ok) throw new Error(result.error || "Request failed");
                 return result;
             } catch (err) {
-                showError(err.message);
+                console.error("NOIR FETCH ERROR:", err);
+                document.getElementById('error').textContent = "SERVER ERROR";
                 return { error: err.message };
             }
         }
 
-        // Login handler
-        loginBtn.addEventListener('click', async () => {
-            const username
-= usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-            
-            if (!username || !password) {
-                showError("Credentials required");
-                return;
-            }
-            
-            const result = await noirFetch('login', { username, password });
-            if (result.success) alert("ACCESS GRANTED");
+        // ===== EVENT HANDLERS =====
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const res = await noirFetch('login', {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            });
+            if (res.success) alert("ACCESS GRANTED");
         });
 
-        // Create handler
-        createBtn.addEventListener('click', async () => {
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
-            
-            if (!username || !password) {
-                showError("Credentials required");
-                return;
-            }
-            
-            const result = await noirFetch('create', { username, password });
-            if (result.success) alert("USER CREATED");
+        document.getElementById('createBtn').addEventListener('click', async () => {
+            const res = await noirFetch('create', {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            });
+            if (res.success) alert("USER CREATED");
         });
+
+        // ===== INIT CONFIRMATION =====
+        console.log("NOIR SYSTEM ACTIVE");
+        document.querySelector('h1').style.textShadow = "0 0 10px
+#00ffa3";
     </script>
 </body>
 </html>
