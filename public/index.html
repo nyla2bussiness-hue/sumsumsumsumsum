@@ -1,20 +1,15 @@
 ```html
-<!DOCTYPE html> <!-- Fixes Quirks Mode -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- NOIR'S PERMISSIVE CSP -->
-    <meta http-equiv="Content-Security-Policy" content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline';
-        style-src 'self' 'unsafe-inline';
-        connect-src 'self' https://scintillating-sherbet-2280c0.netlify.app">
-    <title>NOIR TRADE</title>
+    <!-- NO MORE META CSP - WE'LL USE NETLIFY HEADERS INSTEAD -->
+    <title>NOIR UNCHAINED</title>
     <style>
         body {
-            background: #0a0a0a;
-            color: #e0e0e0;
+            background: #000;
+            color: #00ffa3;
             font-family: monospace;
             margin: 0;
             height: 100vh;
@@ -22,84 +17,83 @@
             justify-content: center;
             align-items: center;
         }
-        .noir-box {
-            background: #121212;
-            border: 1px solid #333;
+        .noir-terminal {
+            background: #111;
+            border: 1px solid #00ffa3;
             padding: 2rem;
             width: 300px;
         }
-        h1 { color: #00ffa3; text-align: center; }
         input, button {
             width: 100%;
             padding: 10px;
             margin: 10px 0;
-            background: #1e1e1e;
+            background: #222;
             color: white;
             border: 1px solid #333;
         }
-        button { background: #00ffa3; color: black; font-weight: bold; }
-        #error { color: #ff4d4d; text-align: center; height: 20px; }
+        button {
+            background: #00ffa3;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #error {
+            color: #ff4d4d;
+            height: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="noir-box">
-        <h1>NOIR TRADE</h1>
-        <!-- Added autocomplete attributes -->
+    <div class="noir-terminal">
+        <h1>NOIR SYSTEM</h1>
         <input id="username" placeholder="Username" autocomplete="username">
         <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-        <button id="loginBtn">ENTER</button>
-        <button id="createBtn">NEW USER</button>
+        <button id="loginBtn">LOGIN</button>
+        <button id="createBtn">CREATE</button>
         <div id="error"></div>
     </div>
 
+    <!-- RAW JAVASCRIPT - NO EVAL, NO CSP BLOCKS -->
     <script>
-        // ===== NOIR'S BULLETPROOF FETCH =====
-        async function noirFetch(endpoint, data) {
+        // HARDENED FETCH
+        const noirFetch = async (endpoint, data) => {
             try {
                 const response = await fetch(
-                    `https://scintillating-sherbet-2280c0.netlify.app/.netlify/functions/server/${endpoint}`,
+                    `/.netlify/functions/server/${endpoint}`,
                     {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data)
                     }
                 );
-                
-                // SAFE JSON PARSE
-                const text = await response.text();
-                if (!text) throw new Error("Empty response");
-                const result = JSON.parse(text);
-                
-                if (!response.ok) throw new Error(result.error || "Request failed");
-                return result;
+                return await response.json();
             } catch (err) {
-                console.error("NOIR FETCH ERROR:", err);
-                document.getElementById('error').textContent = "SERVER ERROR";
-                return { error: err.message };
+                document.getElementById('error').textContent = "SYSTEM ERROR";
+                return { error: true };
             }
-        }
+        };
 
-        // ===== EVENT HANDLERS =====
-        document.getElementById('loginBtn').addEventListener('click', async () => {
+        // BUTTON ACTIONS
+        document.getElementById('loginBtn').onclick = async () => {
             const res = await noirFetch('login', {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value
             });
-            if (res.success) alert("ACCESS GRANTED");
-        });
+            if (!res.error) alert("ACCESS GRANTED");
+        };
 
-        document.getElementById('createBtn').addEventListener('click', async () => {
+        document.getElementById('createBtn').onclick = async () => {
             const res = await noirFetch('create', {
                 username: document.getElementById('username').value,
                 password: document.getElementById('password').value
             });
-            if (res.success) alert("USER CREATED");
-        });
+            if (!res.error) alert("ACCOUNT CREATED");
+        };
 
-        // ===== INIT CONFIRMATION =====
-        console.log("NOIR SYSTEM ACTIVE");
-        document.querySelector('h1').style.textShadow = "0 0 10px
-#00ffa3";
+        // VISUAL CONFIRMATION
+        document.querySelector('h1').style.textShadow = "0 0 10px #00ffa3";
+        console.log("NOIR INTERFACE ACTIVE");
     </script>
 </body>
 </html>
