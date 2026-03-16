@@ -1,45 +1,289 @@
+```html
 <!DOCTYPE html>
-<html>
-<!-- [Previous head and styles remain exactly the same] -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Platform</title>
+    <style>
+        /* ===== BABY-PROOF STYLES ===== */
+        :root {
+            --primary: #00ffa3;
+            --danger: #ff4d4d;
+            --bg-dark: #0b0e11;
+            --bg-panel: #151a21;
+            --text-light: #eee;
+        }
+        
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Prevents weird scrollbars */
+        }
+        
+        .login-container {
+            background: var(--bg-panel);
+            padding: 2rem;
+            border-radius: 10px;
+            width: 300px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease-in; /* Smooth appearance */
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 24px; /* Bigger text */
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: white;
+            box-sizing: border-box;
+            font-size: 16px; /* Easier to read */
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            transform: scale(1.02);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        .login-btn {
+            background: var(--primary);
+            color: #000;
+        }
+        
+        .create-btn {
+            background: #2962FF;
+            color: white;
+        }
+        
+        .error {
+            color: var(--danger);
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            min-height: 20px;
+        }
+        
+        .demo-note {
+            font-size: 12px;
+            text-align: center;
+            color: #777;
+            margin-top: 20px;
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 10px auto;
+            border: 4px solid rgba(0,0,0,0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
 <body>
-    <!-- [Previous HTML structure remains the same] -->
+    <!-- ===== BABY-PROOF HTML ===== -->
+    <div class="login-container">
+        <h1>Trade Nexus</h1>
+        <input id="username" placeholder="Username" autocomplete="username" aria-label="Username">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password">
+        <button id="loginBtn" class="login-btn">Login</button>
+        <button id="createBtn" class="create-btn">Create Account</button>
+        <div id="spinner" class="spinner"></div>
+        <div id="error" class="error" role="alert"></div>
+        <div class="demo-note">Demo account: demo / demo</div>
+    <
+/div>
 
+    <!-- ===== BABY-PROOF JAVASCRIPT ===== -->
     <script>
-        // Enhanced API handler with JSON parsing safeguards
-        async function handleResponse(response) {
-            const text = await response.text();
-            try {
-                return text ? JSON.parse(text) : {};
-            } catch (e) {
-                console.error('JSON parse error:', text);
-                throw new Error('Invalid server response');
-            }
-        }
+        // 1. WAIT FOR PAGE TO LOAD (BABY'S FIRST STEP)
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully!');
+            
+            // 2. GET ALL ELEMENTS (PUTTING TOYS IN PLACE)
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const createBtn = document.getElementById('createBtn');
+            const errorDiv = document.getElementById('error');
+            const spinner = document.getElementById('spinner');
 
-        async function makeRequest(endpoint, data) {
-            try {
-                const response = await fetch(`/.netlify/functions/server/${endpoint}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await handleResponse(response);
-                
-                if (!response.ok) {
-                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            // 3. SHOW/HIDE FUNCTIONS (BABY'S TOOLS)
+            function showLoading(show) {
+                spinner.style.display = show ? 'block' : 'none';
+                loginBtn.disabled = show;
+                createBtn.disabled = show;
+            }
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.style.opacity = 1;
+                setTimeout(() => {
+                    errorDiv.style.opacity = 0;
+                }, 5000);
+            }
+
+            function showSuccess(message) {
+                errorDiv.style.color = 'var(--primary)';
+                errorDiv.textContent = message;
+                setTimeout(() => {
+                    errorDiv.textContent = '';
+                    errorDiv.style.color = 'var(--danger)';
+                }, 3000);
+            }
+
+            // 4. SUPER SAFE API CALL (BABY-PROOF NETWORKING)
+            async function makeRequest(endpoint, data) {
+                showLoading(true);
+                try {
+                    const response = await fetch(/.netlify/functions/server/${endpoint}, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    // SAFE JSON PARSE (EVEN IF SERVER SCREAMS)
+                    const text = await response.text();
+                    let result;
+                    try {
+                        result = text ? JSON.parse(text) : {};
+                    } catch (e) {
+                        console.error('Bad JSON:', text);
+                        throw new Error('Server sent gibberish');
+                    }
+
+                    if (!response.ok) {
+                        throw new Error(result.error || Error ${response.status});
+                    }
+
+                    return result;
+                } catch (error) {
+                    console.error('API Error:', error);
+                    showError(error.message || 'Network go boom 💥');
+                    return { error: error.message };
+                } finally {
+                    showLoading(false);
                 }
-                
-                return result;
-                
-            } catch (error) {
-                console.error('API Error:', error);
-                showError(error.message || 'Network error. Please try again.');
-                return { error: error.message };
             }
-        }
 
-        // [Rest of your existing JavaScript code remains the same]
+            // 5. BUTTON ACTIONS (BABY'S FIRST WORDS)
+            loginBtn.addEventListener('click', async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (!username || !password) {
+                    showError('Need both username and password!');
+                    return;
+                }
+
+                const result = await makeRequest('login', { username, password });
+                
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    showSuccess('Login worked! Pretend we redirected...');
+                    // window.location.href = '/dashboard.html';
+                }
+            });
+
+            createBtn.addEventListener('click', async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (!username || !passw
+ord) {
+                    showError('Need both username and password!');
+                    return;
+                }
+
+                if (username.length < 3 || password.length < 3) {
+                    showError('Make username/password longer than 3 letters!');
+                    return;
+                }
+
+                const result = await makeRequest('create', { username, password });
+                
+                if (result.error) {
+                    showError(result.error);
+                } else {
+                    showSuccess('Account created! Ready to login!');
+                    usernameInput.value = '';
+                    passwordInput.value = '';
+                }
+            });
+
+            // 6. ENTER KEY SUPPORT (BABY'S FIRST STEPS)
+            [usernameInput, passwordInput].forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        if (e.target === usernameInput) {
+                            passwordInput.focus();
+                        } else {
+                            loginBtn.click();
+                        }
+                    }
+                });
+            });
+
+            // 7. FIRST-RUN CHECK (BABY'S FIRST SMILE)
+            console.log('Everything is ready!');
+            document.body.style.opacity = 1; // Fade in
+        });
+
+        // 8. EMERGENCY BACKUP (BABY'S SAFETY NET)
+        window.onerror = function(message) {
+            console.error('Global error:', message);
+            document.body.innerHTML = `
+                <h1 style="color:red">Oh no! 😱</h1>
+                <p>JavaScript crashed: ${message}</p>
+                <button onclick="location.reload()">Click to try again</button>
+            `;
+        };
     </script>
 </body>
 </html>
+```
